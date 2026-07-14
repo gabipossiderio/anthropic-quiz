@@ -11,7 +11,7 @@ interface Body {
   language?: 'pt' | 'en'
 }
 
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
+const MODEL = process.env.GEMINI_MODEL || 'gemini-flash-lite-latest'
 
 function buildPrompt(body: Body): string {
   const language = body.language === 'en' ? 'en' : 'pt'
