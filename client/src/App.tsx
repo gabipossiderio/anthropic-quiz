@@ -160,7 +160,9 @@ function App() {
           />
         </div>
 
-        <Footer />
+        <div className="mt-auto">
+          <Footer />
+        </div>
       </div>
 
       {game.phase === 'question' && game.currentQuestion && (
