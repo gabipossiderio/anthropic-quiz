@@ -18,7 +18,7 @@ export const TEXTS = {
     sound: 'SOUND',
     finish: 'FINISH',
     finishConfirm: 'End the game now and see the report for the questions answered so far?',
-    needThree: 'Answer at least 3 questions to unlock the report.',
+    needThree: 'Answer at least 1 question to unlock the report.',
     confirmYes: 'YES',
     confirmNo: 'CANCEL',
     yourTurn: 'YOUR TURN',
@@ -64,7 +64,7 @@ export const TEXTS = {
     finish: 'ENCERRAR',
     finishConfirm:
       'Encerrar o jogo agora e ver o relatório com as perguntas respondidas até aqui?',
-    needThree: 'Responda pelo menos 3 perguntas para liberar o relatório.',
+    needThree: 'Responda pelo menos 1 pergunta para liberar o relatório.',
     confirmYes: 'SIM',
     confirmNo: 'CANCELAR',
     yourTurn: 'SUA VEZ',

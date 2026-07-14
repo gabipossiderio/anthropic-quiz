@@ -50,8 +50,13 @@ function App() {
 
   const saveRanking = async () => {
     setSaved('saving')
+    const scored = game.teams.filter((team) => team.points > 0)
+    if (scored.length === 0) {
+      setSaved('saved')
+      return
+    }
     const res = await Promise.all(
-      game.teams.map((team) => submitScore(team.name, team.points)),
+      scored.map((team) => submitScore(team.name, team.points)),
     )
     setSaved(res.some((r) => r.ok) ? 'saved' : 'error')
   }
@@ -222,13 +227,13 @@ function App() {
 
             <button
               type="button"
-              disabled={game.history.length < 3 || exporting}
+              disabled={game.history.length < 1 || exporting}
               onClick={exportReport}
               className="font-pixel mt-4 w-full bg-flag px-4 py-3 text-[10px] leading-relaxed text-black hover:brightness-110 disabled:cursor-not-allowed disabled:bg-border disabled:text-muted"
             >
               {exporting ? t.aiLoading : `⭳ ${t.exportReport}`}
             </button>
-            {game.history.length < 3 && (
+            {game.history.length < 1 && (
               <p className="mt-2 text-center text-sm text-muted">{t.needThree}</p>
             )}
 

@@ -59,7 +59,7 @@ export default async function handler(req: Request): Promise<Response> {
       const name = String(body.name ?? '').trim().slice(0, 16)
       const points = Math.floor(Number(body.points))
 
-      if (!name || !Number.isFinite(points) || points < 0 || points > 100000) {
+      if (!name || !Number.isFinite(points) || points <= 0 || points > 100000) {
         return jsonResponse({ error: 'invalid_score' }, 400)
       }
 
