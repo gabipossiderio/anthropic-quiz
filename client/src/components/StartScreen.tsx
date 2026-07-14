@@ -48,25 +48,24 @@ export function StartScreen({
   }, [])
 
   return (
-    <div className="relative flex min-h-svh flex-col items-center justify-center p-4 pb-14">
+    <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 p-4 pb-14">
       <Scenery />
 
-      <div className="relative flex w-full max-w-5xl flex-col items-stretch justify-center gap-4 lg:flex-row lg:items-start">
-        <div className="pixel-panel relative w-full bg-surface/95 p-6 text-center lg:flex-1">
-          <div className="absolute right-3 top-3 flex items-center gap-2">
-            {languageButton}
-            {soundButton}
-          </div>
+      <div className="pixel-panel relative w-full max-w-xl bg-surface/95 p-6 text-center">
+        <div className="absolute right-3 top-3 flex items-center gap-2">
+          {languageButton}
+          {soundButton}
+        </div>
 
-          <h1 className="font-pixel mt-8 text-2xl leading-relaxed text-accent">
-            CCA-F
-          </h1>
-          <p className="font-pixel mt-1 text-xs text-text">HUNT</p>
-          <p className="mt-3 text-lg text-muted">
+        <h1 className="font-pixel mt-8 text-2xl leading-relaxed text-accent">
+          CCA-F
+        </h1>
+        <p className="font-pixel mt-1 text-xs text-text">HUNT</p>
+        <p className="mt-3 text-lg text-muted">
           {t.subtitle.replace('{count}', String(questionCount))}
         </p>
 
-          <div className="mt-6 text-left">
+        <div className="mt-6 text-left">
             <p className="font-pixel text-[10px] text-flag">{t.players}</p>
             <div className="mt-3 flex flex-col gap-2">
               {teams.map((team, i) => (
@@ -125,22 +124,21 @@ export function StartScreen({
           )}
         </div>
 
-        <div className="flex w-full flex-col items-center justify-center gap-5 lg:w-64 lg:shrink-0 lg:self-center">
-          <p className="font-pixel text-[10px] text-flag">{t.rankingTitle}</p>
-          {rankStatus === 'unavailable' && (
-            <p className="text-center text-base text-muted/70">
-              {t.rankingUnavailable}
-            </p>
-          )}
-          {rankStatus === 'ok' && ranking.length === 0 && (
-            <p className="text-center text-base text-muted/70">
-              {t.rankingEmpty}
-            </p>
-          )}
-          {rankStatus === 'ok' && ranking.length > 0 && (
-            <Podium entries={ranking} />
-          )}
-        </div>
+      <div className="flex w-full max-w-xs flex-col items-center gap-4 lg:absolute lg:right-8 lg:top-8 lg:w-56 lg:items-end">
+        <p className="font-pixel text-[10px] text-flag">{t.rankingTitle}</p>
+        {rankStatus === 'unavailable' && (
+          <p className="text-center text-base text-muted/70">
+            {t.rankingUnavailable}
+          </p>
+        )}
+        {rankStatus === 'ok' && ranking.length === 0 && (
+          <p className="text-center text-base text-muted/70">
+            {t.rankingEmpty}
+          </p>
+        )}
+        {rankStatus === 'ok' && ranking.length > 0 && (
+          <Podium entries={ranking} />
+        )}
       </div>
 
       <div className="absolute inset-x-0 bottom-2">
