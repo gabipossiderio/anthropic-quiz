@@ -32,19 +32,9 @@ export function StartScreen({
   const questionCount = Math.floor((QUESTIONS.length - 1) / 10) * 10
 
   const [ranking, setRanking] = useState<RankingEntry[]>([])
-  const [rankStatus, setRankStatus] = useState<'loading' | 'ok' | 'unavailable'>(
-    'loading',
-  )
 
   useEffect(() => {
-    fetchRanking().then((r) => {
-      if (r.ok) {
-        setRanking(r.ranking)
-        setRankStatus('ok')
-      } else {
-        setRankStatus('unavailable')
-      }
-    })
+    fetchRanking().then((r) => setRanking(r.ok ? r.ranking : []))
   }, [])
 
   return (
@@ -124,22 +114,12 @@ export function StartScreen({
           )}
         </div>
 
-      <div className="flex w-full max-w-xs flex-col items-center gap-4 lg:absolute lg:left-[calc(75%+9rem)] lg:top-1/2 lg:w-auto lg:max-w-none lg:-translate-x-1/2 lg:-translate-y-1/2">
-        <p className="font-pixel text-[10px] text-flag">{t.rankingTitle}</p>
-        {rankStatus === 'unavailable' && (
-          <p className="text-center text-base text-muted/70">
-            {t.rankingUnavailable}
-          </p>
-        )}
-        {rankStatus === 'ok' && ranking.length === 0 && (
-          <p className="text-center text-base text-muted/70">
-            {t.rankingEmpty}
-          </p>
-        )}
-        {rankStatus === 'ok' && ranking.length > 0 && (
+      {ranking.length > 0 && (
+        <div className="flex w-full max-w-xs flex-col items-center gap-4 lg:absolute lg:left-[calc(75%+9rem)] lg:top-1/2 lg:w-auto lg:max-w-none lg:-translate-x-1/2 lg:-translate-y-1/2">
+          <p className="font-pixel text-[10px] text-flag">{t.rankingTitle}</p>
           <Podium entries={ranking} />
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="absolute inset-x-0 bottom-2">
         <Footer />

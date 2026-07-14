@@ -68,10 +68,6 @@ function App() {
   }
 
   useEffect(() => {
-    if (game.phase === 'setup') {
-      audioEngine.stopMusic()
-      return
-    }
     audioEngine.startMusic(game.phase === 'minigame' ? 'action' : 'calm')
   }, [game.phase])
 
@@ -90,7 +86,9 @@ function App() {
       aria-label={language === 'en' ? 'Mudar para português' : 'Switch to English'}
     >
       <span className="text-lg leading-none">🌐</span>
-      <span className="font-pixel text-[9px]">{language === 'en' ? 'PT' : 'EN'}</span>
+      <span className="font-pixel text-[9px] leading-none">
+        {language === 'en' ? 'PT' : 'EN'}
+      </span>
     </button>
   )
 
@@ -106,7 +104,7 @@ function App() {
       aria-pressed={!muted}
     >
       <span className="text-lg leading-none">{muted ? '🔇' : '🔊'}</span>
-      <span className="font-pixel text-[9px]">{t.sound}</span>
+      <span className="font-pixel text-[9px] leading-none">{t.sound}</span>
     </button>
   )
 
