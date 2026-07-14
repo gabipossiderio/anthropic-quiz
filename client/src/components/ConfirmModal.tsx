@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useI18n } from '../i18n'
 
 interface Props {
@@ -16,8 +17,21 @@ export function ConfirmModal({
   const { t } = useI18n()
   const color = tone === 'danger' ? 'text-wrong' : 'text-accent'
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onCancel])
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 animate-fade-in">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={message}
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 animate-fade-in"
+    >
       <div className="pixel-panel w-full max-w-md overflow-hidden bg-surface animate-modal-in">
         <div className="flex items-center gap-3 border-b-2 border-border bg-black/40 px-5 py-3">
           <span

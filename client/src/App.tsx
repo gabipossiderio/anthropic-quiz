@@ -87,6 +87,7 @@ function App() {
       onClick={toggleLanguage}
       className="pixel-panel flex h-10 items-center gap-2 bg-black px-3 text-flag"
       title="PT / EN"
+      aria-label={language === 'en' ? 'Mudar para português' : 'Switch to English'}
     >
       <span className="text-lg leading-none">🌐</span>
       <span className="font-pixel text-[9px]">{language === 'en' ? 'PT' : 'EN'}</span>
@@ -101,6 +102,8 @@ function App() {
         muted ? 'text-muted' : 'text-accent'
       }`}
       title={t.sound}
+      aria-label={muted ? `${t.sound}: off` : `${t.sound}: on`}
+      aria-pressed={!muted}
     >
       <span className="text-lg leading-none">{muted ? '🔇' : '🔊'}</span>
       <span className="font-pixel text-[9px]">{t.sound}</span>
@@ -196,7 +199,12 @@ function App() {
       )}
 
       {game.finished && (
-        <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/80 p-4 animate-fade-in">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={t.gameOver}
+          className="fixed inset-0 z-[55] flex items-center justify-center bg-black/80 p-4 animate-fade-in"
+        >
           <div className="pixel-panel flex max-h-[92svh] w-full max-w-lg flex-col overflow-y-auto bg-surface p-6 animate-modal-in">
             <p className="font-pixel text-center text-sm text-flag">
               {t.gameOver}

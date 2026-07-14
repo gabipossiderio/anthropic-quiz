@@ -50,6 +50,15 @@ export function QuestionModal({
     return () => window.clearTimeout(id)
   }, [timeLeft, locked])
 
+  useEffect(() => {
+    if (locked) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [locked, onCancel])
+
   const choose = (index: number) => {
     if (locked) return
     const isCorrect = index === question.correctAnswer
@@ -75,7 +84,12 @@ export function QuestionModal({
   const correct = outcome === 'correct'
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80 p-4 animate-fade-in">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={category?.shortName ?? 'Question'}
+      className="fixed inset-0 z-40 flex items-center justify-center bg-black/80 p-4 animate-fade-in"
+    >
       <div
         className={`pixel-panel flex max-h-[92svh] w-full max-w-3xl flex-col bg-surface animate-modal-in ${
           outcome === 'wrong' ? 'animate-shake' : ''

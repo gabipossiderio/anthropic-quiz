@@ -155,7 +155,12 @@ export function TargetShooter({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 animate-fade-in">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={t.hitToWin}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 animate-fade-in"
+    >
       <div className="flex w-full max-w-4xl flex-col gap-2">
         <div className="pixel-panel flex flex-wrap items-center justify-between gap-2 bg-dirt px-3 py-2 sm:px-4">
           <div className="flex items-center gap-4">
