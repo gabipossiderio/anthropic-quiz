@@ -47,6 +47,7 @@ export const TEXTS = {
     saveScore: 'SAVE TO RANKING',
     saving: 'Saving...',
     saved: 'Saved!',
+    noScoreToSave: 'Score some points to enter the ranking.',
   },
   pt: {
     subtitle:
@@ -92,6 +93,7 @@ export const TEXTS = {
     saveScore: 'SALVAR NO RANKING',
     saving: 'Salvando...',
     saved: 'Salvo!',
+    noScoreToSave: 'Faça pontos para entrar no ranking.',
   },
 }
 

@@ -247,7 +247,11 @@ function App() {
 
             <button
               type="button"
-              disabled={saved === 'saving' || saved === 'saved'}
+              disabled={
+                saved === 'saving' ||
+                saved === 'saved' ||
+                !game.teams.some((team) => team.points > 0)
+              }
               onClick={saveRanking}
               className="font-pixel mt-2 w-full bg-black px-4 py-3 text-[10px] text-flag hover:brightness-125 disabled:cursor-not-allowed disabled:text-muted"
             >
@@ -260,6 +264,10 @@ function App() {
             {saved === 'error' && (
               <p className="mt-1 text-sm text-muted">{t.rankingUnavailable}</p>
             )}
+            {saved === 'idle' &&
+              !game.teams.some((team) => team.points > 0) && (
+                <p className="mt-1 text-sm text-muted">{t.noScoreToSave}</p>
+              )}
 
             <button
               type="button"
