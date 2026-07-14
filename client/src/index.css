@@ -1,0 +1,299 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: #5c94fc;
+  --color-surface: #131a28;
+  --color-surface-2: #0a0f17;
+  --color-text: #e8eaf0;
+  --color-muted: #9aa6b6;
+  --color-border: #2e3a4e;
+  --color-accent: #eaa059;
+  --color-accent-strong: #cf7f3e;
+  --color-correct: #6fcf84;
+  --color-wrong: #e0796e;
+
+  --color-sky: #5c94fc;
+  --color-grass: #35a24a;
+  --color-grass-dark: #1f7a34;
+  --color-dirt: #9a5230;
+  --color-dirt-dark: #6f381f;
+  --color-dirt-light: #c07f52;
+  --color-tree: #a55e33;
+  --color-hit: #e0796e;
+  --color-flag: #6cc07e;
+
+  --font-sans:
+    ui-sans-serif, system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-pixel: 'Press Start 2P', ui-monospace, monospace;
+  --font-round: 'Pixelify Sans', ui-sans-serif, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+svg,
+img {
+  image-rendering: pixelated;
+}
+
+.pixel-border {
+  box-shadow:
+    0 0 0 2px #000,
+    0 0 0 4px var(--color-text);
+}
+
+.pixel-panel {
+  border: 2px solid #000;
+  box-shadow:
+    inset -2px -2px 0 0 #00000080,
+    inset 2px 2px 0 0 #ffffff30;
+}
+
+.perspective {
+  perspective: 1000px;
+}
+
+.flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.4s steps(6, end);
+}
+
+.flip-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flip-back {
+  transform: rotateY(180deg);
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-in {
+  animation: modal-in 0.22s steps(4, end) both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.18s steps(3, end) both;
+}
+
+@keyframes float-target {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(var(--drift-x), var(--drift-y));
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+.animate-float {
+  animation: float-target var(--drift-dur, 2.4s) ease-in-out infinite;
+}
+
+@keyframes fly-ltr {
+  from {
+    left: -18%;
+  }
+  to {
+    left: 112%;
+  }
+}
+
+@keyframes fly-rtl {
+  from {
+    left: 112%;
+  }
+  to {
+    left: -18%;
+  }
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes impact {
+  0% {
+    transform: scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.animate-impact {
+  animation: impact 0.4s steps(5, end) forwards;
+}
+
+@keyframes hit-float {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-26px);
+    opacity: 0;
+  }
+}
+
+.animate-hit-float {
+  animation: hit-float 0.7s steps(6, end) forwards;
+}
+
+@keyframes wing-flap {
+  0%,
+  100% {
+    transform: rotate(-20deg);
+  }
+  50% {
+    transform: rotate(30deg);
+  }
+}
+
+.duck-wing {
+  transform-box: fill-box;
+  transform-origin: 68% 85%;
+  animation: wing-flap 0.28s steps(2, end) infinite;
+}
+
+@keyframes duck-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  18% {
+    transform: translateY(-8px) rotate(4deg);
+  }
+  100% {
+    transform: translateY(80vh) rotate(24deg);
+  }
+}
+
+.animate-duck-fall {
+  animation: duck-fall 1s steps(12, end) forwards;
+}
+
+@keyframes duck-flyaway {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-90vh);
+    opacity: 0;
+  }
+}
+
+.animate-flyaway {
+  animation: duck-flyaway 0.8s steps(10, end) forwards;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-8px);
+  }
+  40% {
+    transform: translateX(8px);
+  }
+  60% {
+    transform: translateX(-5px);
+  }
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.4s steps(4, end);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.3s steps(4, end) both;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.animate-blink {
+  animation: blink 0.5s steps(1, end) infinite;
+}
