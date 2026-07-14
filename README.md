@@ -10,8 +10,7 @@ with an **AI-generated analysis** of your weak spots.
 
 **▶ Live demo:** https://anthropic-quiz-client.vercel.app
 
-<!-- Add a screenshot or GIF at docs/screenshot.png for the best first impression -->
-<!-- ![CCA-F Hunt](docs/screenshot.png) -->
+![CCA-F Hunt gameplay](docs/screenshot.png)
 
 ---
 
