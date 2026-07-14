@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   CATEGORIES,
   DEFAULT_CONFIG,
@@ -39,24 +39,95 @@ function cloneTeams(teams: Team[]) {
   return teams.map((team) => ({ ...team }))
 }
 
+const SAVE_KEY = 'cca-game'
+
+interface Snapshot {
+  teams: Team[]
+  currentTeamIndex: number
+  board: Question[]
+  playedCells: number[]
+  cellResult: Record<number, 'correct' | 'wrong'>
+  history: Result[]
+  manuallyEnded: boolean
+}
+
+function loadSaved(): Snapshot | null {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY)
+    if (!raw) return null
+    const data = JSON.parse(raw) as Snapshot
+    if (!Array.isArray(data.board) || data.board.length === 0) return null
+    return data
+  } catch {
+    return null
+  }
+}
+
+function saveGame(snapshot: Snapshot) {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot))
+  } catch {
+    void 0
+  }
+}
+
+function clearSaved() {
+  try {
+    localStorage.removeItem(SAVE_KEY)
+  } catch {
+    void 0
+  }
+}
+
 export function useQuizGame() {
+  const [saved] = useState(loadSaved)
   const [config] = useState<GameConfig>(DEFAULT_CONFIG)
-  const [teams, setTeams] = useState<Team[]>(() => cloneTeams(DEFAULT_TEAMS))
-  const [currentTeamIndex, setCurrentTeamIndex] = useState(0)
-  const [board, setBoard] = useState<Question[]>([])
-  const [playedCells, setPlayedCells] = useState<number[]>([])
+  const [teams, setTeams] = useState<Team[]>(
+    () => saved?.teams ?? cloneTeams(DEFAULT_TEAMS),
+  )
+  const [currentTeamIndex, setCurrentTeamIndex] = useState(
+    saved?.currentTeamIndex ?? 0,
+  )
+  const [board, setBoard] = useState<Question[]>(saved?.board ?? [])
+  const [playedCells, setPlayedCells] = useState<number[]>(
+    saved?.playedCells ?? [],
+  )
   const [cellResult, setCellResult] = useState<
     Record<number, 'correct' | 'wrong'>
-  >({})
+  >(saved?.cellResult ?? {})
   const [currentIndex, setCurrentIndex] = useState<number | null>(null)
-  const [phase, setPhase] = useState<Phase>('setup')
+  const [phase, setPhase] = useState<Phase>(saved ? 'board' : 'setup')
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null)
-  const [history, setHistory] = useState<Result[]>([])
-  const [manuallyEnded, setManuallyEnded] = useState(false)
+  const [history, setHistory] = useState<Result[]>(saved?.history ?? [])
+  const [manuallyEnded, setManuallyEnded] = useState(saved?.manuallyEnded ?? false)
 
   const finished =
     manuallyEnded ||
     (board.length > 0 && playedCells.length >= board.length)
+
+  useEffect(() => {
+    if (phase === 'setup' || board.length === 0) {
+      return
+    }
+    saveGame({
+      teams,
+      currentTeamIndex,
+      board,
+      playedCells,
+      cellResult,
+      history,
+      manuallyEnded,
+    })
+  }, [
+    phase,
+    teams,
+    currentTeamIndex,
+    board,
+    playedCells,
+    cellResult,
+    history,
+    manuallyEnded,
+  ])
 
   const recordResult = useCallback(
     (question: Question, answeredCorrectly: boolean, pointsEarned: number) => {
@@ -197,6 +268,7 @@ export function useQuizGame() {
   )
 
   const backToSetup = useCallback(() => {
+    clearSaved()
     setPhase('setup')
     setCurrentQuestion(null)
     setCurrentIndex(null)

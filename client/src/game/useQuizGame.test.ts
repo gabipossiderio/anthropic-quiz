@@ -1,8 +1,12 @@
 import { act, renderHook } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { useQuizGame } from './useQuizGame'
 
 describe('useQuizGame', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
   it('starts in setup with a single team', () => {
     const { result } = renderHook(() => useQuizGame())
     expect(result.current.phase).toBe('setup')
@@ -53,5 +57,28 @@ describe('useQuizGame', () => {
     act(() => result.current.startGame())
     act(() => result.current.finishNow())
     expect(result.current.finished).toBe(true)
+  })
+
+  it('resumes an in-progress game on a fresh mount', () => {
+    const first = renderHook(() => useQuizGame())
+    act(() => first.result.current.startGame())
+    act(() => first.result.current.selectCell(0))
+    act(() => first.result.current.answer(false))
+    const board = first.result.current.board
+
+    const second = renderHook(() => useQuizGame())
+    expect(second.result.current.phase).toBe('board')
+    expect(second.result.current.board).toEqual(board)
+    expect(second.result.current.playedCells).toContain(0)
+    expect(second.result.current.history).toHaveLength(1)
+  })
+
+  it('backToSetup clears the saved game', () => {
+    const first = renderHook(() => useQuizGame())
+    act(() => first.result.current.startGame())
+    act(() => first.result.current.backToSetup())
+
+    const second = renderHook(() => useQuizGame())
+    expect(second.result.current.phase).toBe('setup')
   })
 })
