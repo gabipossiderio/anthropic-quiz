@@ -1,3 +1,5 @@
+export const config = { runtime: 'edge' }
+
 const KEY = 'cca-leaderboard'
 const TOP = 10
 

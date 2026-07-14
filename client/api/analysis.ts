@@ -1,3 +1,5 @@
+export const config = { runtime: 'edge' }
+
 interface WrongAnswer {
   category: string
   prompt: string
