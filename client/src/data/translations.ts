@@ -721,4 +721,484 @@ export const QUESTION_TRANSLATIONS: Record<string, QuestionTranslation> = {
     explanation:
       'Mantém o contexto caro que você já construiu, ao mesmo tempo que diz ao agente exatamente quais 3 arquivos reler — mínimo de desperdício, máxima precisão.',
   },
+  Q61: {
+    prompt:
+      'Você está implementando o loop agêntico de um coordenador de pesquisa chamando a Messages API diretamente, sem um framework que gerencie o ciclo de turnos por você. Você envia o pedido do usuário mais suas definições de ferramentas, e a resposta do Claude volta com `stop_reason: "tool_use"` e um único bloco `tool_use` solicitando a ferramenta `web_search` com uma query específica. Seu código atualmente só retorna o texto do Claude para quem chamou e para.\nO que o seu loop precisa fazer em seguida para continuar corretamente?',
+    options: [
+      'Tratar `tool_use` como fim do turno e retornar o texto do Claude ao usuário, já que o modelo terminou de raciocinar.',
+      'Executar a ferramenta solicitada e então enviar uma nova requisição com todas as mensagens anteriores mais um bloco `tool_result` correspondente ao id do `tool_use`.',
+      'Reenviar a requisição idêntica sem mudanças; o modelo vai tentar a chamada de ferramenta sozinho na segunda passada.',
+      'Aumentar `max_tokens` e reenviar, porque `tool_use` indica que a resposta foi truncada antes de terminar.',
+    ],
+    explanation:
+      '`stop_reason: tool_use` significa que o Claude pausou para chamar uma ferramenta. Você roda a ferramenta e anexa um `tool_result` (com o `tool_use_id` correspondente) às mensagens, depois chama a API de novo para o modelo continuar.',
+  },
+  Q62: {
+    prompt:
+      'Você está construindo uma integração headless com o Claude que roda sem supervisão em um job de backend, e precisa ramificar seu fluxo de controle com base no campo `stop_reason` retornado em toda resposta da Messages API, para o job saber se terminou, se precisa continuar ou se deve rodar uma ferramenta. Um colega escreveu a lógica de ramificação de cabeça e você está revisando.\nQual interpretação dos valores de stop_reason está correta?',
+    options: [
+      '`end_turn` significa que o usuário precisa responder; `stop_sequence` significa que ocorreu um erro; `tool_use` significa que uma ferramenta falhou.',
+      'Todos os valores diferentes de `end_turn` indicam erros que devem abortar o loop.',
+      '`end_turn` significa que o Claude terminou naturalmente; `max_tokens` significa que a saída foi cortada pelo limite de tokens; `tool_use` significa que o Claude está solicitando uma chamada de ferramenta.',
+      '`max_tokens` significa que a conversa excedeu a janela de contexto e precisa ser resumida antes de continuar.',
+    ],
+    explanation:
+      'Cada stop_reason sinaliza por que a geração parou: end_turn = conclusão natural, max_tokens = atingiu o teto de saída (talvez precise continuar), tool_use = uma ferramenta foi solicitada. Cada um leva a um comportamento diferente do loop.',
+  },
+  Q63: {
+    prompt:
+      'Seu coordenador de pesquisa orquestra dois subagentes especializados. O subagente de busca web roda primeiro e retorna oito fontes relevantes, que aparecem na própria conversa do coordenador. O coordenador então cria um subagente de análise de documentos para examinar essas fontes, mas ele responde que não tem fontes para analisar — mesmo que, do ponto de vista do coordenador, as fontes tenham sido claramente reunidas momentos antes.\nQual regra fundamental você está violando?',
+    options: [
+      'Subagentes não herdam o contexto da conversa do pai; o coordenador precisa passar as fontes necessárias explicitamente no prompt do subagente.',
+      'Subagentes compartilham o contexto do pai automaticamente, então os resultados da busca se perderam numa condição de corrida entre os dois subagentes.',
+      'Subagentes só conseguem ler o contexto do pai se usarem o mesmo tier de modelo do coordenador.',
+      'Subagentes herdam o contexto, mas os blocos `tool_result` são removidos, então só a prosa do agente de busca sobreviveu.',
+    ],
+    explanation:
+      'Cada subagente começa com um contexto novo e isolado. Nada do pai (ou de subagentes irmãos) chega até ele a menos que o coordenador coloque isso no prompt daquele subagente.',
+  },
+  Q64: {
+    prompt:
+      'Um engenheiro pede que seu agente audite um monorepo de 900 arquivos em busca de todo uso remanescente de uma API depreciada, antes de removê-la. O código está dividido em quatro serviços independentes que não compartilham módulos, e o codebase completo é grande demais para caber em uma única janela de contexto. A precisão importa: um chamador esquecido significa quebra em produção na hora da remoção.\nQual abordagem de orquestração é a mais eficaz?',
+    options: [
+      'Ler cada arquivo sequencialmente no contexto principal até encontrar a API depreciada, e então parar.',
+      'Carregar os quatro serviços em um único subagente com janela de contexto estendida e deixá-lo varrer tudo de uma vez.',
+      'Pedir ao engenheiro que identifique manualmente qual serviço tem maior probabilidade de ser afetado e buscar apenas nele.',
+      'Criar um subagente por serviço para buscar em seus arquivos em paralelo, cada um retornando uma lista estruturada de ocorrências, e então o coordenador mescla as quatro listas.',
+    ],
+    explanation:
+      'Trabalho independente e paralelizável, com pegada total maior que uma janela de contexto, é o caso canônico de fan-out: um subagente focado por serviço, cada um retornando um resultado compacto que o coordenador combina.',
+  },
+  Q65: {
+    prompt:
+      'Você roda um pipeline de pesquisa de quatro etapas (busca → análise → síntese → escrita) sobre um lote de 20 fontes. O subagente de análise trava depois de processar apenas 8 das 20 fontes. Ao inspecionar, os resultados da busca de todas as 20 e as 8 análises concluídas estão salvos com segurança; as 12 fontes restantes nunca foram analisadas.\nComo o coordenador deve retomar para o melhor equilíbrio entre fidelidade e eficiência?',
+    options: [
+      'Reiniciar o pipeline inteiro a partir da busca para garantir uma execução consistente.',
+      'Reexecutar a análise apenas nas 12 fontes não processadas e então mesclar com as 8 análises concluídas antes da síntese.',
+      'Pular as 12 fontes restantes e sintetizar a partir das 8 análises já feitas.',
+      'Passar as 20 fontes brutas diretamente para a síntese e descartar a etapa de análise por completo.',
+    ],
+    explanation:
+      'Preserve o trabalho concluído e refaça só o que falta: analise as 12 restantes, mescle com as 8 e então sintetize. Sem recomputação desperdiçada, sem perda de cobertura.',
+  },
+  Q66: {
+    prompt:
+      'Pede-se a um coordenador que investigue por que uma métrica de negócio importante regrediu da noite para o dia. Os dados passam por três etapas — ingestão, transformação e relatório — e ninguém sabe de antemão qual etapa introduziu a regressão; a causa pode estar em qualquer uma delas, ou numa combinação.\nQual estratégia de decomposição de tarefas se encaixa melhor nesta investigação?',
+    options: [
+      'Fixar uma sequência rígida — checar ingestão, depois transformação, depois relatório — e rodar as três independentemente dos achados intermediários.',
+      'Produzir um plano completo e exaustivo de todos os caminhos de código possíveis antes de ler qualquer coisa.',
+      'Deixar o coordenador gerar a próxima subtarefa de investigação dinamicamente com base no que cada etapa revela, adaptando o plano conforme as evidências se acumulam.',
+      'Criar as três investigações em paralelo sempre e sempre sintetizar todas as saídas, mesmo quando a primeira já encontrou a causa.',
+    ],
+    explanation:
+      'Trabalho de diagnóstico é inerentemente adaptativo — cada achado muda o próximo passo mais útil. A decomposição dinâmica segue as evidências em vez de se comprometer com um plano fixo ou totalmente paralelo de antemão.',
+  },
+  Q67: {
+    prompt:
+      'Seu agente de pesquisa precisa reunir perfis de contexto sobre cinco empresas não relacionadas antes de produzir uma comparação. Cada consulta individual leva cerca de 20 segundos, e feitas uma após a outra a etapa inteira passa de um minuto e meio, do que os usuários reclamam. As cinco consultas não dependem umas das outras de forma alguma.\nQual a forma mais eficaz de reduzir o tempo total?',
+    options: [
+      'Criar cinco subagentes em paralelo, um por empresa, e então comparar os resumos que retornarem.',
+      'Fazer as cinco consultas sequencialmente, mas com `max_tokens` maior para que cada uma termine mais rápido.',
+      'Combinar as cinco empresas em um único prompt para o modelo pesquisar todas numa passada só.',
+      'Cachear o resultado da primeira empresa e reutilizá-lo como template para as demais.',
+    ],
+    explanation:
+      'Consultas independentes sem dependência de ordem paralelizam com facilidade: cinco subagentes concorrentes transformam 5×20s de trabalho sequencial em aproximadamente uma janela de 20s.',
+  },
+  Q68: {
+    prompt:
+      'Um agente de suporte está tratando um pedido de devolução. Ele chama `lookup_order`, e o `tool_result` retornado mostra que o item foi enviado há 60 dias — bem além da janela de devolução de 30 dias. O agente agora tem tanto `process_refund` quanto `escalate_to_human` disponíveis e precisa escolher um.\nComo o loop agêntico decide qual ferramenta chamar em seguida?',
+    options: [
+      'Uma tabela de roteamento fixa mapeia a idade do pedido diretamente para a próxima ferramenta, contornando o modelo.',
+      'A própria ferramenta decide e dispara automaticamente a próxima ferramenta na sequência.',
+      'O loop sempre chama as ferramentas na ordem em que foram registradas até uma ter sucesso.',
+      'O `tool_result` é anexado à conversa e o modelo raciocina sobre ele para escolher a próxima chamada de ferramenta.',
+    ],
+    explanation:
+      'O loop agêntico funciona anexando cada tool_result à conversa e deixando o modelo escolher a próxima ação. É assim que "60 dias → fora da política → escalar" é decidido.',
+  },
+  Q69: {
+    prompt:
+      'Usuários frequentemente enviam perguntas de acompanhamento como "me lembre o que a segunda fonte concluiu" durante uma sessão de pesquisa. O monitoramento mostra que cada uma leva mais de 40 segundos. A investigação revela que, para cada acompanhamento desses, o coordenador cria o subagente de síntese e reenvia todos os 80K tokens de achados acumulados — mesmo que o coordenador já tenha exatamente esses achados no próprio contexto, de quando orquestrou a pesquisa.\nQual a correção mais eficaz?',
+    options: [
+      'Habilitar prompt caching no subagente de síntese para que reenviar 80K tokens fique mais barato.',
+      'Fazer o coordenador responder acompanhamentos simples de recuperação/resumo diretamente do próprio contexto, reservando a criação de subagentes para análises genuinamente novas.',
+      'Pré-computar resumos em três granularidades toda vez que novos achados chegam.',
+      'Dar ao subagente de síntese uma ferramenta para puxar achados do coordenador sob demanda.',
+    ],
+    explanation:
+      'Criar um subagente para reingerir um contexto que o coordenador já tem é puro overhead. Para acompanhamentos simples, o coordenador deveria apenas responder ele mesmo.',
+  },
+  Q70: {
+    prompt:
+      'Depois de uma sessão longa e cara de análise em que o agente construiu um entendimento profundo de um módulo, um engenheiro quer prototipar duas refatorações concorrentes desse mesmo módulo. Cada protótipo deve partir exatamente do estado já analisado, e as duas tentativas não podem contaminar o contexto uma da outra, para os trade-offs serem comparados de forma limpa.\nQual a forma mais limpa de estruturar isso?',
+    options: [
+      'Continuar na mesma sessão, fazendo a refatoração A por completo e depois a refatoração B, em sequência.',
+      'Iniciar duas sessões totalmente novas e reexecutar toda a análise em cada uma.',
+      'Usar `fork_session` para ramificar a sessão analisada em duas linhas independentes, desenvolvendo uma refatoração em cada fork.',
+      'Rodar as duas refatorações intercaladas em uma sessão e separá-las depois marcando as mensagens.',
+    ],
+    explanation:
+      'O fork dá a cada refatoração seu próprio contexto isolado que parte da mesma linha de base de análise — exploração paralela com zero contaminação cruzada e sem reanálise.',
+  },
+  Q71: {
+    prompt:
+      'Você construiu um sistema de pesquisa orquestrador-trabalhador em que cada subagente roda no próprio contexto isolado e não consegue ver a conversa de nenhum outro subagente. No meio do processo, o subagente de síntese precisa de um dado específico que o subagente de busca descobriu antes.\nComo esse dado chega até o subagente de síntese?',
+    options: [
+      'O coordenador pega a saída do subagente de busca e inclui o dado no prompt do subagente de síntese.',
+      'Os dois subagentes abrem um canal direto e passam o dado entre si.',
+      'Ambos os subagentes leem de um contexto compartilhado que o framework sincroniza automaticamente.',
+      'O subagente de síntese chama o subagente de busca como uma ferramenta aninhada para recuperá-lo.',
+    ],
+    explanation:
+      'Subagentes são isolados; o coordenador é o único hub. Ele encaminha a saída relevante de cada trabalhador para o prompt do próximo.',
+  },
+  Q72: {
+    prompt:
+      'Você tem três arquivos CLAUDE.md em jogo ao mesmo tempo: um de nível de usuário `~/.claude/CLAUDE.md` dizendo "sempre use tabs", um de nível de projeto `CLAUDE.md` dizendo "use indentação de 2 espaços", e um de nível de diretório `CLAUDE.md` dentro de `src/legacy/` dizendo "acompanhe o estilo do arquivo ao redor". Você pede ao agente para editar um arquivo que fica em `src/legacy/`.\nQual orientação prevalece para essa edição?',
+    options: [
+      'O arquivo de nível de usuário sempre vence porque carrega primeiro e estabelece os padrões globais.',
+      'O arquivo de nível de projeto sempre vence porque é a fonte canônica do repositório.',
+      'Os três são concatenados com peso igual e o modelo escolhe arbitrariamente.',
+      'A instrução mais específica (nível de diretório) vence para arquivos sob aquele diretório, sobrepondo-se às orientações de projeto e de usuário.',
+    ],
+    explanation:
+      'Arquivos CLAUDE.md compõem do amplo ao específico, e o escopo mais próximo (mais específico) tem precedência — um arquivo de nível de diretório sobrepõe as orientações de projeto e de usuário para os arquivos da sua subárvore.',
+  },
+  Q73: {
+    prompt:
+      'Você quer uma regra de código que se aplique somente a arquivos de teste e fique fora do caminho em todo o resto. Você adiciona um arquivo de regra em `.claude/rules/` com YAML frontmatter, pretendendo que ele ative exclusivamente para caminhos que casem com `**/*.test.ts`.\nQual mecanismo restringe corretamente a regra apenas a esses arquivos?',
+    options: [
+      'Colocar o arquivo de regra fisicamente dentro de cada diretório de testes.',
+      'Um padrão glob no frontmatter do arquivo de regra que casa com os caminhos-alvo, de modo que a regra só ativa quando os arquivos relevantes estão em jogo.',
+      'Uma condicional escrita no corpo da regra que o modelo avalia em tempo de execução para cada arquivo.',
+      'Nomear o arquivo de regra como `test.ts` para o Claude Code casar por nome de arquivo.',
+    ],
+    explanation:
+      'Regras em `.claude/rules/` usam frontmatter (incluindo escopo por glob) para declarar quando se aplicam, então uma regra pode mirar `**/*.test.ts` e ficar inativa nos demais casos.',
+  },
+  Q74: {
+    prompt:
+      'Um engenheiro está prestes a deixar o agente fazer edições amplas em um serviço crítico e de alto tráfego. Antes de um único arquivo ser tocado, ele quer ver e aprovar a abordagem pretendida pelo agente — os arquivos que ele planeja mudar e a estratégia — para que um erro seja pego antes de qualquer mudança acontecer.\nQual recurso do Claude Code atende essa necessidade?',
+    options: [
+      'Rodar com `--dangerously-skip-permissions` para o plano executar imediatamente.',
+      'Reduzir `max_tokens` para o agente produzir só um plano curto e nenhuma edição.',
+      'Plan Mode, que faz o agente pesquisar e propor um plano para aprovação antes de fazer qualquer edição.',
+      'Limpar o contexto com `/clear` para o agente começar a planejar do zero.',
+    ],
+    explanation:
+      'O Plan Mode é exatamente isso: o agente investiga e apresenta um plano para o humano aprovar antes de qualquer mudança ser aplicada — um portão de revisão para trabalho de alto risco.',
+  },
+  Q75: {
+    prompt:
+      'Você está integrando o Claude Code ao seu pipeline de CI para revisar pull requests automaticamente a cada push. A etapa precisa rodar totalmente de forma não interativa (sem TTY), e deve emitir uma saída legível por máquina que um script downstream consiga parsear para postar comentários de revisão de volta no PR.\nQual invocação é apropriada?',
+    options: [
+      'Rodar headless com `-p` para um único prompt e `--output-format json` para o pipeline parsear resultados estruturados, com cada execução isolada.',
+      'Abrir a TUI interativa e roteirizar teclas para conduzir a revisão.',
+      'Rodar `-p` mas raspar o texto formatado para humanos do terminal com regex para extrair os achados.',
+      'Iniciar uma sessão de longa duração compartilhada entre todos os PRs para o contexto acumular entre revisões.',
+    ],
+    explanation:
+      'Para automação você usa o modo headless (`-p`) com `--output-format json` para saída parseável, e mantém cada execução do CI isolada por sessão para que as revisões não vazem estado umas para as outras.',
+  },
+  Q76: {
+    prompt:
+      'Seu CI roda o Claude Code a cada commit, em muitos pull requests concorrentes. Ao revisar os logs, você descobre que a revisão de um job referencia arquivos e contexto de um PR completamente diferente e não relacionado, que estava aberto ao mesmo tempo.\nQual a causa mais provável dessa contaminação cruzada?',
+    options: [
+      'O Claude Code cacheia o conteúdo dos arquivos globalmente entre máquinas por padrão.',
+      'Os dados de treinamento do modelo incluíam o outro PR.',
+      '`--output-format json` mescla as saídas de jobs concorrentes.',
+      'Os jobs estão compartilhando/retomando a mesma sessão em vez de rodar isolados, então o contexto vaza entre execuções não relacionadas.',
+    ],
+    explanation:
+      'Execuções automatizadas precisam ser isoladas por sessão. Se os jobs retomam ou compartilham um session id, o contexto acumulado de uma execução contamina outra — exatamente o vazamento entre PRs descrito.',
+  },
+  Q77: {
+    prompt:
+      'Seu time roda o mesmo prompt de várias etapas dezenas de vezes por dia — "rode o linter, resuma as falhas, depois proponha correções" — e todo mundo redigita ou copia e cola ele toda vez. Você quer que seja invocável como um comando curto, nomeado e reutilizável, compartilhado por todo o time no Claude Code.\nQual o mecanismo indicado?',
+    options: [
+      'Colar o prompt inteiro toda vez; não há como salvar prompts reutilizáveis.',
+      'Definir um slash command customizado (um template de prompt salvo em `.claude/commands/`) que todo o time pode invocar pelo nome.',
+      'Codificar as etapas no `CLAUDE.md` para que rodem automaticamente em toda mensagem.',
+      'Criar um servidor MCP cujo único trabalho é guardar o texto do prompt.',
+    ],
+    explanation:
+      'Fluxos de prompt repetidos pertencem a slash commands customizados — templates reutilizáveis em `.claude/commands/` que qualquer pessoa do time pode invocar pelo nome.',
+  },
+  Q78: {
+    prompt:
+      'Um engenheiro recém-integrado se vê reexplicando os mesmos fatos do projeto ao agente no início de toda sessão: o comando de build, qual test runner usar e as convenções de diretório do repositório. É repetitivo e propenso a erro.\nQual a forma indicada de fazer o agente lembrar desses detalhes de forma persistente entre sessões?',
+    options: [
+      'Pedir ao agente que memorize; ele vai reter isso entre sessões automaticamente.',
+      'Colocar num comentário no topo de um arquivo-fonte e torcer para o agente ler.',
+      'Registrar tudo no `CLAUDE.md` do projeto, que é carregado no contexto automaticamente no início de cada sessão.',
+      'Aumentar a janela de contexto para as sessões anteriores permanecerem carregadas.',
+    ],
+    explanation:
+      'O `CLAUDE.md` é a memória persistente do projeto: convenções, comandos e restrições colocados ali carregam em toda sessão automaticamente, então você não precisa repetir.',
+  },
+  Q79: {
+    prompt:
+      'Uma política de segurança rígida diz que o agente nunca, sob nenhuma circunstância, pode editar arquivos no diretório `secrets/` — e isso precisa valer independentemente de como o modelo for instruído, incluindo instruções adversariais ou acidentais que possam convencê-lo a fazer uma edição.\nQual a forma mais confiável de impor isso no Claude Code?',
+    options: [
+      'Um hook PreToolUse que inspeciona chamadas de Edit/Write e bloqueia qualquer uma que mire `secrets/` antes da ferramenta rodar.',
+      'Uma regra enfática no `CLAUDE.md` proibindo edições em `secrets/`.',
+      'Um exemplo few-shot no system prompt mostrando o agente recusando tais edições.',
+      'Remover a ferramenta Edit por completo durante a sessão inteira.',
+    ],
+    explanation:
+      'Políticas duras e inegociáveis pertencem fora da discrição do modelo. Um hook PreToolUse intercepta e bloqueia a chamada de ferramenta de forma determinística toda vez, independentemente do prompt.',
+  },
+  Q80: {
+    prompt:
+      'Você precisa que o Claude retorne dados de produto (nome, preço, dimensões, tags) como JSON estrito que seu serviço downstream consiga desserializar diretamente em objetos tipados, sem uma camada frágil de parsing de texto ou limpeza no meio.\nQual o mecanismo canônico para obter saída estruturada confiável?',
+    options: [
+      'Pedir ao Claude em prosa para "responder apenas com JSON" e dar `JSON.parse` no texto da mensagem.',
+      'Solicitar Markdown e remover as cercas de código antes de parsear.',
+      'Baixar a temperatura para 0 para que a saída de texto seja sempre JSON válido.',
+      'Definir uma ferramenta cujo `input_schema` seja o seu JSON schema e deixar o Claude "chamá-la", de modo que os argumentos cheguem como dados estruturados validados pelo schema.',
+    ],
+    explanation:
+      'Tool use é o mecanismo canônico de saída estruturada: o modelo emite argumentos que obedecem ao seu input_schema, então você recebe dados estruturados validados em vez de parsear texto livre.',
+  },
+  Q81: {
+    prompt:
+      'Em produção, cerca de 6% das suas extrações falham na validação de JSON schema — tipos errados, campos obrigatórios faltando, enums malformados. Você quer um loop de recuperação automática que resolva a grande maioria delas sem um humano no meio.\nQual o padrão padrão para isso?',
+    options: [
+      'Descartar silenciosamente as extrações que falham para manter a taxa de sucesso alta.',
+      'Na falha de validação, chamar o modelo de novo com o erro de validação específico anexado, deixando-o corrigir a saída — geralmente resolvido em algumas tentativas.',
+      'Desabilitar a validação de schema para que nada falhe.',
+      'Mudar todos os campos para string para que qualquer saída valide.',
+    ],
+    explanation:
+      'Um loop de validação-retry que devolve o erro concreto ao modelo resolve a maioria dos erros de formato em 1 a 3 tentativas, porque o modelo consegue ver exatamente o que corrigir.',
+  },
+  Q82: {
+    prompt:
+      'Seu extrator continua formatando o mesmo campo de forma inconsistente de um documento para o outro — às vezes "Cotton/Poly", às vezes "cotton blend", e ocasionalmente omitindo por completo mesmo quando o material está claramente indicado. Você já adicionou instruções explícitas no prompt descrevendo o formato desejado e isso não resolveu a inconsistência.\nQual o próximo passo mais eficaz?',
+    options: [
+      'Subir o tier do modelo e torcer para o seguimento de instruções melhorar.',
+      'Tornar o campo obrigatório para nunca ser omitido.',
+      'Adicionar exemplos few-shot mostrando o formato canônico exato que você espera para aquele campo.',
+      'Rodar três extrações e ficar com o formato majoritário.',
+    ],
+    explanation:
+      'Exemplos few-shot demonstram concretamente o formato-alvo, ensinando ao modelo a representação canônica e melhorando tanto a consistência quanto a recuperação de campos que estavam sendo pulados.',
+  },
+  Q83: {
+    prompt:
+      'Documentos chegam de forma constante ao longo do dia útil e cada um precisa passar pelo seu modelo de extração. Os resultados, porém, só são necessários na manhã seguinte — não há requisito de tempo real. O volume é alto e você está sob pressão para minimizar o custo de modelo desse pipeline.\nQual escolha de API se encaixa, e por quê?',
+    options: [
+      'A Message Batches API, que oferece custo cerca de 50% menor com uma janela de processamento assíncrona que cabe confortavelmente num SLA de um dia para o outro.',
+      'A Messages API em tempo real, porque o batch não garante resultados até de manhã.',
+      'A API em tempo real com temperatura 0 para reduzir o uso de tokens.',
+      'A Batches API só se todos os documentos forem idênticos, senão tempo real.',
+    ],
+    explanation:
+      'Cargas tolerantes a latência e de alto volume são o ponto forte da Batches API: cerca de 50% mais barata com uma janela assíncrona (até 24h) que atende facilmente um prazo de um dia para o outro.',
+  },
+  Q84: {
+    prompt:
+      'Seu serviço de extração define uma ferramenta `emit_record` e espera que toda resposta seja uma chamada a ela, para um parser estrito consumir os argumentos estruturados. Em produção, porém, o modelo ocasionalmente responde com uma explicação em texto em vez de invocar a ferramenta, e cada uma dessas respostas quebra o parser.\nComo garantir que o modelo sempre chame a ferramenta?',
+    options: [
+      'Adicionar "SEMPRE chame a ferramenta" em letras maiúsculas no system prompt e confiar nisso.',
+      'Parsear a resposta em texto como fallback sempre que a ferramenta não for chamada.',
+      'Remover a ferramenta e pedir JSON em prosa em vez disso.',
+      'Definir `tool_choice` para forçar a ferramenta específica, de modo que o modelo tenha que retornar uma chamada de `emit_record` em vez de texto livre.',
+    ],
+    explanation:
+      '`tool_choice` definido para uma ferramenta específica força o modelo a invocar exatamente aquela ferramenta, eliminando as respostas em texto livre que quebram um parser que espera saída estruturada.',
+  },
+  Q85: {
+    prompt:
+      'Você está extraindo campos de registros regulatórios onde um erro pode ter consequências de compliance, então a precisão de uma única passada não é boa o suficiente. Você tem, no entanto, orçamento para chamadas adicionais ao modelo por documento.\nQual técnica mais aumenta a confiabilidade nessas extrações de alto risco?',
+    options: [
+      'Aumentar `max_tokens` para a passada única ter mais espaço.',
+      'Rodar uma segunda passada em que o modelo revisa a própria extração contra a fonte e sinaliza/corrige discrepâncias.',
+      'Extrair duas vezes com temperatura 0 e ficar com o primeiro resultado.',
+      'Encurtar o schema para haver menos coisas a errar.',
+    ],
+    explanation:
+      'Uma revisão em várias passadas — em que uma segunda chamada verifica a extração contra a fonte — pega erros que a primeira passada perdeu, trocando custo extra por confiabilidade materialmente maior em documentos críticos.',
+  },
+  Q86: {
+    prompt:
+      'No seu schema de extração o modelo continua trocando dois campos numéricos — `net_amount` e `gross_amount` — colocando a cifra errada em cada um. Só os nomes dos campos claramente não bastam para o modelo distingui-los em documentos ambíguos.\nQual a correção mais eficaz no nível do schema?',
+    options: [
+      'Renomear os dois campos para `amount_1` e `amount_2`.',
+      'Tornar os dois campos obrigatórios para nenhum ser pulado.',
+      'Adicionar descrições claras a cada campo no schema explicando exatamente o que significam e como distingui-los.',
+      'Mesclá-los em um único campo `amount`.',
+    ],
+    explanation:
+      'As descrições de campo no schema são lidas pelo modelo e são a alavanca principal de desambiguação — explicitar o que é `net` vs `gross` resolve a confusão na origem.',
+  },
+  Q87: {
+    prompt:
+      'Você precisa extrair cláusulas específicas de contratos que rotineiramente são muito mais longos do que uma única requisição consegue processar confortavelmente — alguns têm centenas de páginas. Você ainda precisa de toda cláusula relevante, com a redação exata preservada e rastreável até onde apareceu.\nQual a estratégia de extração mais confiável?',
+    options: [
+      'Dividir o documento em seções, extrair de cada uma e então mesclar os resultados — mantendo o registro de qual seção cada valor veio.',
+      'Truncar cada contrato às primeiras páginas e extrair apenas delas.',
+      'Colar o contrato inteiro independentemente do tamanho e deixar o modelo decidir o que manter.',
+      'Resumir o contrato primeiro e depois extrair as cláusulas do resumo.',
+    ],
+    explanation:
+      'Para documentos que excedem um tamanho confortável de requisição, divida por seção, extraia por bloco e mescle com a proveniência da fonte — você preserva a cobertura sem perder rastreabilidade. Resumir primeiro descartaria o texto exato da cláusula que você precisa.',
+  },
+  Q88: {
+    prompt:
+      'Você está ajustando como um agente de suporte usa ferramentas. No fluxo conversacional geral (saudações, conversa fiada) você quer que o modelo decida sozinho se alguma ferramenta é sequer necessária. Mas você também tem um fluxo separado e dedicado em que chamar uma ferramenta específica é obrigatório e inegociável.\nQual combinação de configurações de `tool_choice` corresponde a esses dois fluxos?',
+    options: [
+      'Usar `any` em todo lugar para o modelo sempre chamar alguma ferramenta, inclusive em saudações.',
+      'Omitir `tool_choice` por completo; ele não tem efeito no comportamento.',
+      'Usar `auto` para o fluxo obrigatório e `none` para o geral.',
+      'Usar `auto` para o fluxo geral (o modelo decide) e forçar a ferramenta específica onde a chamada é obrigatória.',
+    ],
+    explanation:
+      '`auto` deixa o modelo escolher se chama uma ferramenta (certo para saudações), enquanto forçar uma ferramenta específica garante a chamada onde ela é obrigatória. `any` forçaria erroneamente uma ferramenta até numa saudação simples.',
+  },
+  Q89: {
+    prompt:
+      'Seu servidor MCP de ferramentas de dev expõe uma única ferramenta geral `code_op` que recebe um parâmetro `instruction` de texto livre. Os resultados são inconsistentes: "encontre chamadores" às vezes volta como edições, enquanto "renomeie este símbolo" às vezes volta como um relatório escrito em vez de uma mudança de fato.\nQual mudança de design mais melhora a confiabilidade?',
+    options: [
+      'Manter a ferramenta única mas escrever uma descrição mais longa com mais exemplos de instruções.',
+      'Dividi-la em ferramentas com propósito específico (`find_callers`, `rename_symbol`, `extract_function`), cada uma com um contrato de entrada/saída definido.',
+      'Adicionar um pré-classificador que reescreve a instrução antes da ferramenta rodar.',
+      'Baixar a temperatura para a instrução de texto livre ser interpretada de forma determinística.',
+    ],
+    explanation:
+      'Instruções de texto livre empurram a semântica para a prosa, que o modelo interpreta de forma inconsistente. Ferramentas com propósito específico dão contratos explícitos e bem tipados, então o modelo escolhe a operação certa de forma confiável.',
+  },
+  Q90: {
+    prompt:
+      'Você está decidindo se investe em construir um servidor MCP customizado que ofereça uma ferramenta de "buscar no codebase", mesmo que o Claude Code já venha com as ferramentas built-in Grep e Glob, que cobrem busca básica por texto e por nome de arquivo.\nQuando construir a ferramenta MCP é a escolha certa?',
+    options: [
+      'Sempre construir ferramentas MCP; as built-in estão depreciadas em configurações agênticas.',
+      'Nunca construir ferramentas MCP quando existe uma built-in, mesmo para capacidades muito diferentes.',
+      'Quando ela oferece capacidade que as built-in não têm (ex.: consultas semânticas/cientes de AST); se só duplica o Grep, prefira a built-in.',
+      'Construir só se a built-in estiver temporariamente falhando.',
+    ],
+    explanation:
+      'Adicione uma ferramenta MCP quando ela oferece algo que as built-in genuinamente não fazem. Duplicar uma built-in existente só adiciona ambiguidade de seleção e manutenção sem ganho.',
+  },
+  Q91: {
+    prompt:
+      'Sua ferramenta `get_customer` retorna o resultado como uma única frase em prosa, por exemplo "John, membro gold desde 2019 com 2 tickets abertos." Sua lógica downstream tenta ler o tier de assinatura e a contagem de tickets abertos a partir dessa frase, e continua parseando errado ambos quando a redação varia um pouco.\nQual o melhor design para a saída da ferramenta?',
+    options: [
+      'Retornar campos estruturados (ex.: `name`, `tier`, `memberSince`, `openTickets`) para o agente e o código downstream lerem de forma inequívoca.',
+      'Retornar uma frase ainda mais longa e descritiva para maior clareza.',
+      'Retornar a prosa mas também logar os dados estruturados no servidor.',
+      'Pedir ao modelo para reformatar a prosa em campos após cada chamada.',
+    ],
+    explanation:
+      'Ferramentas devem retornar dados estruturados, não prosa, para que tanto o modelo quanto o código downstream leiam campos individuais de forma confiável em vez de parsear frases.',
+  },
+  Q92: {
+    prompt:
+      'Sua ferramenta `process_refund` às vezes é invocada com um order id faltando ou um valor ambíguo e não especificado, e cada uma dessas chamadas ruins produz um erro de backend e uma interação frustrada com o cliente. A ferramenta atualmente aceita entrada frouxa e só valida no backend.\nQual mudança de design de ferramenta mais reduz essas chamadas malformadas?',
+    options: [
+      'Aceitar qualquer entrada e validar apenas no backend, retornando erros depois do fato.',
+      'Adicionar uma nota no system prompt pedindo ao modelo para ter cuidado.',
+      'Deixar a ferramenta adivinhar os valores faltantes a partir do contexto da conversa.',
+      'Tornar order id e valor parâmetros obrigatórios e bem descritos no `input_schema` da ferramenta, de modo que o modelo tenha que fornecê-los corretamente.',
+    ],
+    explanation:
+      'Um input_schema preciso com parâmetros obrigatórios e claramente descritos restringe o modelo a produzir chamadas válidas de antemão, prevenindo classes inteiras de invocações malformadas.',
+  },
+  Q93: {
+    prompt:
+      'Um agente tem duas ferramentas relacionadas a cobrança, `refund_order` e `cancel_subscription`, e para reclamações de cobrança às vezes dispara a errada. As duas descrições são lacônicas — "lida com reembolsos" e "lida com cancelamentos" — sem nada sobre quando uma se aplica em vez da outra.\nQual a correção mais eficaz?',
+    options: [
+      'Mesclar as duas ferramentas em uma única `billing_action` com uma flag de modo.',
+      'Reescrever cada descrição para dizer claramente quando usá-la e quando não usá-la, incluindo as condições que as distinguem.',
+      'Remover uma das ferramentas durante conversas de cobrança.',
+      'Adicionar diálogos few-shot para toda forma de falar de cobrança que você conseguir imaginar.',
+    ],
+    explanation:
+      'A seleção de ferramentas é guiada pelas descrições. Explicitar quando cada ferramenta se aplica (e quando não) é a forma mais direta e escalável de impedir que o modelo confunda ferramentas sobrepostas.',
+  },
+  Q94: {
+    prompt:
+      'Depois de conectar cinco servidores MCP separados ao seu agente, a seleção de ferramentas dele piorou visivelmente — agora ele às vezes recorre a ferramentas irrelevantes que não servem para a tarefa. Você conta cerca de 40 ferramentas expostas no total, e boa parte delas nunca é de fato usada nos seus fluxos.\nQual o remédio mais eficaz?',
+    options: [
+      'Manter todas as 40 ferramentas; mais opções sempre ajudam o modelo.',
+      'Renomear todas as ferramentas com um prefixo numérico para impor uma ordem.',
+      'Curar o conjunto de ferramentas expostas até apenas as que o agente realmente precisa, reduzindo a ambiguidade de seleção.',
+      'Aumentar `max_tokens` para o modelo conseguir considerar todas as ferramentas.',
+    ],
+    explanation:
+      'Um conjunto inchado de ferramentas aumenta a chance de má seleção. Curar até as ferramentas relevantes afia as escolhas do modelo — poucas ferramentas bem escopadas superam um catálogo espalhado.',
+  },
+  Q95: {
+    prompt:
+      'Toda conversa de suporte que seu agente atende começa com o mesmo bloco de 8K tokens no system prompt: um manual de política mais a documentação de ferramentas, que nunca muda entre requisições. Latência e custo estão ambos altos, e o profiling mostra que esse prefixo idêntico está sendo reprocessado do zero em cada chamada de API.\nQual a otimização mais eficaz?',
+    options: [
+      'Habilitar prompt caching no prefixo estável para que o conteúdo repetido de política/ferramentas seja reutilizado em vez de reprocessado a cada chamada.',
+      'Apagar o manual de política do prompt e torcer para o modelo se lembrar.',
+      'Resumir o manual para 1K tokens, aceitando a perda de detalhe.',
+      'Baixar `max_tokens` para reduzir o custo por requisição.',
+    ],
+    explanation:
+      'Um prefixo grande e imutável reutilizado entre requisições é o caso clássico de prompt caching — o prefixo cacheado corta latência e custo sem sacrificar nenhum conteúdo.',
+  },
+  Q96: {
+    prompt:
+      'Um agente que escreve relatórios recebe 30 fontes em um único prompt e é solicitado a costurá-las. Na prática, ele cita de forma confiável as primeiras e as últimas fontes, mas consistentemente negligencia as que ficam enterradas no meio desse contexto longo, deixando lacunas visíveis na cobertura.\nQual a mitigação mais eficaz?',
+    options: [
+      'Adicionar as 30 fontes de novo, uma segunda vez, para reforçá-las.',
+      'Aumentar a temperatura para o modelo amostrar mais o meio.',
+      'Dizer ao modelo "leia cada fonte igualmente" e confiar nisso.',
+      'Posicionar as fontes mais importantes no início e no fim do contexto, e/ou processar as fontes em lotes menores e focados.',
+    ],
+    explanation:
+      'Os modelos prestam mais atenção ao começo e ao fim de contextos longos (o efeito lost-in-the-middle). Posicionar o material-chave nas bordas — ou processar em lotes — contrabalança a negligência.',
+  },
+  Q97: {
+    prompt:
+      'Uma sessão longa de pesquisa está se aproximando do limite de contexto do modelo, mas achados do início da sessão ainda importam para o relatório final que você está prestes a gerar. Você precisa ficar sob o limite sem jogar fora a informação que ainda conta.\nQual abordagem preserva a informação mais útil dentro do orçamento?',
+    options: [
+      'Truncar de imediato a metade mais antiga das mensagens.',
+      'Resumir progressivamente as porções mais antigas e estáveis em achados compactos, mantendo o fio ativo na íntegra.',
+      'Não fazer nada e deixar a API descartar o que não couber.',
+      'Reiniciar a sessão do zero para recuperar a janela inteira.',
+    ],
+    explanation:
+      'O resumo progressivo comprime o material anterior já consolidado em achados densos, preservando o trabalho ativo na íntegra — a forma padrão de ficar sob o limite sem perder sinal importante.',
+  },
+  Q98: {
+    prompt:
+      'Você habilita prompt caching para cortar custo e latência, mas a taxa de acerto do cache permanece teimosamente baixa. Investigando, você descobre que seu prompt coloca um pequeno bloco de perfil por usuário logo no topo, imediatamente seguido do grande manual de política compartilhado, que é idêntico para todo usuário.\nPor que o cache é ineficaz aqui, e qual a correção?',
+    options: [
+      'O cache é por conta e não funciona com múltiplos usuários de forma alguma.',
+      'O manual é grande demais para cachear; encolha-o abaixo do limite de tamanho do cache.',
+      'O cache se baseia no prefixo; um bloco por usuário no início muda o prefixo a cada requisição. Coloque o conteúdo compartilhado estável primeiro e o variável depois, para o prefixo compartilhado ser cacheável.',
+      'O cache só funciona com temperatura 0; suba-a e tente de novo.',
+    ],
+    explanation:
+      'O prompt caching reutiliza um prefixo estável. Se conteúdo específico do usuário fica antes do manual compartilhado, o prefixo difere a cada chamada e nada acerta. Ordene estável primeiro, variável por último para o grande bloco compartilhado permanecer um prefixo cacheável.',
+  },
+  Q99: {
+    prompt:
+      'Para fazer um agente de suporte "saber de tudo", um engenheiro cola a base de conhecimento inteira de 200 páginas no system prompt de cada requisição. Depois da mudança, as respostas ficaram mais lentas e, em algumas perguntas, na verdade menos precisas do que antes.\nQual a melhor abordagem?',
+    options: [
+      'Recuperar apenas os trechos relevantes da base por consulta (ex.: via busca/ferramentas) em vez de carregar a base inteira toda vez.',
+      'Colar a base duas vezes para o modelo não perder nada.',
+      'Manter a base completa mas baixar a temperatura para afiar as respostas.',
+      'Dividir a base em várias mensagens de sistema na mesma requisição.',
+    ],
+    explanation:
+      'A janela de contexto é finita e enchê-la degrada foco e velocidade. Recupere só os trechos relevantes a cada consulta em vez de carregar a base de conhecimento inteira toda vez.',
+  },
+  Q100: {
+    prompt:
+      'Seu agente de pesquisa ocasionalmente afirma conclusões confiantes e definitivas nos relatórios finais que depois se mostram não sustentadas por nenhuma das fontes que ele reuniu. Você quer aumentar a confiabilidade, mas não quer sufocar cada frase com "possivelmente" e "talvez" e deixar os relatórios inutilmente vagos.\nQual a adição mais eficaz?',
+    options: [
+      'Instruir o agente a adicionar "possivelmente" ou "talvez" em toda frase.',
+      'Usar sempre uma única fonte para não haver nada a reconciliar.',
+      'Aumentar a temperatura para o agente considerar mais possibilidades.',
+      'Adicionar uma passada de verificação que cruza cada afirmação-chave contra as fontes reunidas e sinaliza as que não têm sustentação antes do relatório ser finalizado.',
+    ],
+    explanation:
+      'Uma etapa de verificação dedicada que vincula cada afirmação de volta à sua fonte de sustentação pega especificamente as afirmações sem suporte, melhorando a confiabilidade sem ressalvas generalizadas que deixariam o relatório vago.',
+  },
 }
