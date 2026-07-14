@@ -111,18 +111,18 @@ export function QuestionModal({
             </div>
           )}
 
-          <h2 className="mt-3 text-lg leading-relaxed text-text">
+          <h2 className="mt-3 text-base leading-relaxed text-text">
             {questionText}
           </h2>
 
-          <div className="mt-3 flex flex-col gap-2">
+          <div className="mt-3 flex flex-col gap-1.5">
             {options.map((option, i) => (
               <button
                 key={i}
                 type="button"
                 disabled={locked}
                 onClick={() => choose(i)}
-                className={`pixel-panel flex items-center gap-3 px-3 py-2.5 text-left text-base leading-snug transition-colors ${optionStyle(
+                className={`pixel-panel flex items-center gap-3 px-3 py-2 text-left text-sm leading-snug transition-colors ${optionStyle(
                   i,
                 )}`}
               >
@@ -149,7 +149,7 @@ export function QuestionModal({
                 {correct ? t.correct : timedOut ? t.timesUp : t.wrong}
               </p>
               {!correct && (
-                <p className="mt-2 text-base text-text">
+                <p className="mt-2 text-sm text-text">
                   <span className="text-muted">{t.correctAnswer}</span>
                   <span className="text-correct">
                     {String.fromCharCode(65 + question.correctAnswer)}.{' '}
@@ -158,7 +158,7 @@ export function QuestionModal({
                 </p>
               )}
               {explanation && (
-                <p className="mt-3 border-t-2 border-border pt-3 text-base leading-relaxed text-muted">
+                <p className="mt-2 border-t-2 border-border pt-2 text-sm leading-relaxed text-muted">
                   {explanation}
                 </p>
               )}

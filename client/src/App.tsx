@@ -150,15 +150,20 @@ function App() {
           </div>
         </header>
 
-        <Scoreboard teams={game.teams} currentTeamIndex={game.currentTeamIndex} />
-
-        <div className="flex min-h-0 flex-1 items-center justify-center">
-          <GameBoard
-            board={game.board}
-            playedCells={game.playedCells}
-            cellResult={game.cellResult}
-            onSelect={game.selectCell}
+        <div className="mx-auto flex w-full min-h-0 flex-1 flex-col gap-4 md:max-w-[calc((100svh-15rem)*2)]">
+          <Scoreboard
+            teams={game.teams}
+            currentTeamIndex={game.currentTeamIndex}
           />
+
+          <div className="flex min-h-0 flex-1 items-center justify-center">
+            <GameBoard
+              board={game.board}
+              playedCells={game.playedCells}
+              cellResult={game.cellResult}
+              onSelect={game.selectCell}
+            />
+          </div>
         </div>
 
         <div className="mt-auto">

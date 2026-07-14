@@ -4,6 +4,7 @@ import { fetchRanking, type RankingEntry } from '../game/ranking'
 import type { Team } from '../game/types'
 import { useI18n } from '../i18n'
 import { Footer } from './Footer'
+import { Podium } from './Podium'
 import { Scenery } from './Scenery'
 
 interface Props {
@@ -15,12 +16,6 @@ interface Props {
   onRemoveTeam: (id: string) => void
   onStart: () => void
 }
-
-const MEDAL_BADGE = [
-  'bg-[#f8d800] text-black',
-  'bg-[#c8c8c8] text-black',
-  'bg-[#cd7f32] text-black',
-]
 
 export function StartScreen({
   teams,
@@ -126,44 +121,21 @@ export function StartScreen({
           )}
         </div>
 
-        <div className="pixel-panel w-full overflow-hidden bg-surface/95 lg:w-72 lg:shrink-0 lg:self-start">
-          <div className="border-b-2 border-border bg-black/40 px-4 py-3">
-            <p className="font-pixel text-[10px] text-flag">{t.rankingTitle}</p>
-          </div>
-
-          <div className="flex flex-col px-4 py-1">
-            {rankStatus === 'loading' && (
-              <p className="py-2 text-base text-muted/60">...</p>
-            )}
-            {rankStatus === 'unavailable' && (
-              <p className="py-2 text-base text-muted/70">
-                {t.rankingUnavailable}
-              </p>
-            )}
-            {rankStatus === 'ok' && ranking.length === 0 && (
-              <p className="py-2 text-base text-muted/70">{t.rankingEmpty}</p>
-            )}
-            {ranking.slice(0, 10).map((entry, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 border-b border-border/30 py-2 last:border-0"
-              >
-                <span
-                  className={`font-pixel flex h-6 w-6 shrink-0 items-center justify-center text-[9px] ${
-                    MEDAL_BADGE[i] ?? 'bg-surface-2 text-muted'
-                  }`}
-                >
-                  {i + 1}
-                </span>
-                <span className="flex-1 truncate text-lg text-text">
-                  {entry.name}
-                </span>
-                <span className="font-pixel text-[10px] text-hit">
-                  {entry.points}
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="flex w-full flex-col items-center justify-center gap-5 lg:w-64 lg:shrink-0 lg:self-center">
+          <p className="font-pixel text-[10px] text-flag">{t.rankingTitle}</p>
+          {rankStatus === 'unavailable' && (
+            <p className="text-center text-base text-muted/70">
+              {t.rankingUnavailable}
+            </p>
+          )}
+          {rankStatus === 'ok' && ranking.length === 0 && (
+            <p className="text-center text-base text-muted/70">
+              {t.rankingEmpty}
+            </p>
+          )}
+          {rankStatus === 'ok' && ranking.length > 0 && (
+            <Podium entries={ranking} />
+          )}
         </div>
       </div>
 

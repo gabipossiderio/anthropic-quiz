@@ -15,7 +15,7 @@ export function GameBoard({
   onSelect,
 }: Props) {
   return (
-    <div className="mx-auto grid w-full grid-cols-5 gap-1.5 sm:gap-2 md:grid-cols-10 md:max-w-[calc((100svh-16rem)*2)]">
+    <div className="grid w-full grid-cols-5 gap-1.5 sm:gap-2 md:grid-cols-10">
       {board.map((_, index) => (
         <BoardCell
           key={index}
