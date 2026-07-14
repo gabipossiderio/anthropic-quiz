@@ -11,7 +11,6 @@ import { analyzeWithAI } from './game/ai'
 import { audioEngine } from './game/audio'
 import { submitScore } from './game/ranking'
 import {
-  downloadPdf,
   downloadReport,
   extractFailures,
   generateReport,
@@ -30,21 +29,23 @@ function App() {
     tone?: 'danger'
     action: () => void
   } | null>(null)
-  const [analysis, setAnalysis] = useState<{
-    state: 'idle' | 'loading' | 'done' | 'error' | 'unavailable'
-    text: string
-  }>({ state: 'idle', text: '' })
+  const [exporting, setExporting] = useState(false)
   const [saved, setSaved] = useState<'idle' | 'saving' | 'saved' | 'error'>(
     'idle',
   )
 
-  const runAnalysis = async () => {
-    setAnalysis({ state: 'loading', text: '' })
+  const exportReport = async () => {
+    setExporting(true)
     const { wrong, weak } = extractFailures(game.history)
     const r = await analyzeWithAI(wrong, weak, language)
-    if (r.ok) setAnalysis({ state: 'done', text: r.text || '' })
-    else if (r.error === 'failure') setAnalysis({ state: 'error', text: '' })
-    else setAnalysis({ state: 'unavailable', text: '' })
+    const md = generateReport(
+      game.teams,
+      game.history,
+      language,
+      r.ok ? (r.text ?? '') : '',
+    )
+    downloadReport('cca-f-hunt-report.md', md)
+    setExporting(false)
   }
 
   const saveRanking = async () => {
@@ -56,7 +57,7 @@ function App() {
   }
 
   const restart = () => {
-    setAnalysis({ state: 'idle', text: '' })
+    setExporting(false)
     setSaved('idle')
     game.backToSetup()
   }
@@ -214,63 +215,16 @@ function App() {
               ))}
             </div>
 
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <button
-                type="button"
-                disabled={game.history.length < 3}
-                onClick={() =>
-                  downloadPdf(
-                    'cca-f-hunt-report.pdf',
-                    game.teams,
-                    game.history,
-                    language,
-                  )
-                }
-                className="font-pixel flex-1 bg-flag px-4 py-3 text-[10px] text-black hover:brightness-110 disabled:cursor-not-allowed disabled:bg-border disabled:text-muted"
-              >
-                ⭳ {t.exportPdf}
-              </button>
-              <button
-                type="button"
-                disabled={game.history.length < 3}
-                onClick={() =>
-                  downloadReport(
-                    'cca-f-hunt-report.md',
-                    generateReport(game.teams, game.history, language),
-                  )
-                }
-                className="font-pixel flex-1 bg-black px-4 py-3 text-[10px] text-flag hover:brightness-125 disabled:cursor-not-allowed disabled:text-muted"
-              >
-                ⭳ {t.exportMd}
-              </button>
-            </div>
+            <button
+              type="button"
+              disabled={game.history.length < 3 || exporting}
+              onClick={exportReport}
+              className="font-pixel mt-4 w-full bg-flag px-4 py-3 text-[10px] leading-relaxed text-black hover:brightness-110 disabled:cursor-not-allowed disabled:bg-border disabled:text-muted"
+            >
+              {exporting ? t.aiLoading : `⭳ ${t.exportReport}`}
+            </button>
             {game.history.length < 3 && (
               <p className="mt-2 text-center text-sm text-muted">{t.needThree}</p>
-            )}
-
-            {game.history.length >= 3 && (
-              <button
-                type="button"
-                disabled={analysis.state === 'loading'}
-                onClick={runAnalysis}
-                className="font-pixel mt-2 w-full bg-surface-2 px-4 py-3 text-[10px] text-accent hover:brightness-125 disabled:cursor-wait"
-              >
-                {analysis.state === 'loading'
-                  ? t.aiLoading
-                  : `✨ ${t.aiButton}`}
-              </button>
-            )}
-
-            {analysis.state === 'done' && (
-              <div className="mt-2 max-h-56 overflow-y-auto whitespace-pre-wrap bg-black p-3 text-sm leading-relaxed text-text animate-rise">
-                {analysis.text}
-              </div>
-            )}
-            {analysis.state === 'unavailable' && (
-              <p className="mt-2 text-sm text-muted">{t.aiUnavailable}</p>
-            )}
-            {analysis.state === 'error' && (
-              <p className="mt-2 text-sm text-wrong">{t.aiError}</p>
             )}
 
             <button

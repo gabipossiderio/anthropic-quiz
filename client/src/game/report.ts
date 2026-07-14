@@ -1,4 +1,3 @@
-import { jsPDF } from 'jspdf'
 import { CATEGORIES } from '../data/categories'
 import { STUDY_TIPS } from '../data/studyTips'
 import type { Language } from '../i18n'
@@ -13,6 +12,7 @@ const STRINGS = {
   en: {
     title: '# CCA-F Hunt — Performance Report',
     generatedOn: 'Generated on: ',
+    aiTitle: '## AI study analysis',
     ranking: '## Ranking',
     finalScore: 'Final score',
     questionsAnswered: 'Questions answered',
@@ -37,6 +37,7 @@ const STRINGS = {
   pt: {
     title: '# CCA-F Hunt — Relatório de Desempenho',
     generatedOn: 'Gerado em: ',
+    aiTitle: '## Análise de estudo por IA',
     ranking: '## Ranking',
     finalScore: 'Pontuação final',
     questionsAnswered: 'Perguntas respondidas',
@@ -147,6 +148,7 @@ export function generateReport(
   teams: Team[],
   history: Result[],
   language: Language,
+  aiAnalysis = '',
 ): string {
   const s = STRINGS[language]
   const medals = MEDALS[language]
@@ -164,6 +166,13 @@ export function generateReport(
     lines.push(`${medals[i] ?? `${i + 1}o`} — ${team.name}: ${team.points} pts`)
   })
   lines.push('')
+
+  if (aiAnalysis.trim()) {
+    lines.push(s.aiTitle)
+    lines.push('')
+    lines.push(aiAnalysis.trim())
+    lines.push('')
+  }
 
   ranking.forEach((team) => {
     const teamHistory = history.filter((r) => r.teamId === team.id)
@@ -264,46 +273,3 @@ export function downloadReport(fileName: string, content: string) {
   URL.revokeObjectURL(url)
 }
 
-export function downloadPdf(
-  fileName: string,
-  teams: Team[],
-  history: Result[],
-  language: Language,
-) {
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' })
-  const margin = 44
-  const pageWidth = doc.internal.pageSize.getWidth()
-  const pageHeight = doc.internal.pageSize.getHeight()
-  const textWidth = pageWidth - margin * 2
-  let y = margin
-
-  const md = generateReport(teams, history, language)
-  const lines = md.split('\n')
-
-  const write = (text: string, size: number, bold: boolean, color: [number, number, number]) => {
-    doc.setFont('helvetica', bold ? 'bold' : 'normal')
-    doc.setFontSize(size)
-    doc.setTextColor(color[0], color[1], color[2])
-    const parts = doc.splitTextToSize(text === '' ? ' ' : text, textWidth)
-    for (const part of parts) {
-      if (y > pageHeight - margin) {
-        doc.addPage()
-        y = margin
-      }
-      doc.text(part, margin, y)
-      y += size + 4
-    }
-  }
-
-  for (const line of lines) {
-    const clean = line.replace(/`/g, '').replace(/\*\*/g, '').replace(/_/g, '')
-    if (line.startsWith('# ')) write(clean.slice(2), 18, true, [20, 20, 20])
-    else if (line.startsWith('## ')) write(clean.slice(3), 14, true, [40, 40, 40])
-    else if (line.startsWith('### ')) write(clean.slice(4), 12, true, [60, 60, 60])
-    else if (line === '---') {
-      y += 4
-    } else write(clean, 10, false, [30, 30, 30])
-  }
-
-  doc.save(fileName)
-}
