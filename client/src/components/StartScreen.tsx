@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
+import { QUESTIONS } from '../data/questions'
 import { fetchRanking, type RankingEntry } from '../game/ranking'
 import type { Team } from '../game/types'
 import { useI18n } from '../i18n'
@@ -28,6 +29,7 @@ export function StartScreen({
 }: Props) {
   const { t } = useI18n()
   const canStart = teams[0]?.name.trim() !== ''
+  const questionCount = Math.floor((QUESTIONS.length - 1) / 10) * 10
 
   const [ranking, setRanking] = useState<RankingEntry[]>([])
   const [rankStatus, setRankStatus] = useState<'loading' | 'ok' | 'unavailable'>(
@@ -60,7 +62,9 @@ export function StartScreen({
             CCA-F
           </h1>
           <p className="font-pixel mt-1 text-xs text-text">HUNT</p>
-          <p className="mt-3 text-lg text-muted">{t.subtitle}</p>
+          <p className="mt-3 text-lg text-muted">
+          {t.subtitle.replace('{count}', String(questionCount))}
+        </p>
 
           <div className="mt-6 text-left">
             <p className="font-pixel text-[10px] text-flag">{t.players}</p>
