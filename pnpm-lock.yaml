@@ -16,9 +16,6 @@ importers:
       '@fontsource/press-start-2p':
         specifier: ^5.2.7
         version: 5.2.7
-      '@fontsource/vt323':
-        specifier: ^5.2.7
-        version: 5.2.7
       react:
         specifier: ^19.2.7
         version: 19.2.7
@@ -345,9 +342,6 @@ packages:
 
   '@fontsource/press-start-2p@5.2.7':
     resolution: {integrity: sha512-ezSxYRchANoteja170ZHh2Tt4oejmVEvX42VFPOVVvERSZ68pcuZFjbhHfrK/sNjYmaGg656y7B3431ojO9PCQ==}
-
-  '@fontsource/vt323@5.2.7':
-    resolution: {integrity: sha512-8JTMM23vMhQxin9Cn/ijty8cNwXW4INrln0VAJ2227Rz0CVfkzM3qr3l/CqudZJ6BXCnbCGUTdf2ym3cTNex8A==}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -1727,8 +1721,6 @@ snapshots:
   '@fontsource/pixelify-sans@5.2.7': {}
 
   '@fontsource/press-start-2p@5.2.7': {}
-
-  '@fontsource/vt323@5.2.7': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
