@@ -124,7 +124,7 @@ export function StartScreen({
           )}
         </div>
 
-      <div className="flex w-full max-w-xs flex-col items-center gap-4 lg:absolute lg:right-8 lg:top-8 lg:w-56 lg:items-end">
+      <div className="flex w-full max-w-xs flex-col items-center gap-4 lg:absolute lg:left-[calc(75%+9rem)] lg:top-1/2 lg:w-auto lg:max-w-none lg:-translate-x-1/2 lg:-translate-y-1/2">
         <p className="font-pixel text-[10px] text-flag">{t.rankingTitle}</p>
         {rankStatus === 'unavailable' && (
           <p className="text-center text-base text-muted/70">
