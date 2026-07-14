@@ -1,3 +1,5 @@
+import { json, rateLimit } from './_lib'
+
 export const config = { runtime: 'edge' }
 
 interface WrongAnswer {
@@ -148,6 +150,10 @@ export default async function handler(req: Request): Promise<Response> {
     return json({ error: 'method_not_allowed' }, 405)
   }
 
+  if (!(await rateLimit(req, 'analysis', 15, 60))) {
+    return json({ error: 'rate_limited' }, 429)
+  }
+
   let body: Body
   try {
     body = (await req.json()) as Body
@@ -170,11 +176,4 @@ export default async function handler(req: Request): Promise<Response> {
     )
   }
   return json({ analysis: result.text, provider }, 200)
-}
-
-function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'content-type': 'application/json' },
-  })
 }
