@@ -6,7 +6,7 @@ export type Language = 'en' | 'pt'
 export const TEXTS = {
   en: {
     subtitle:
-      "Take down a developer's worst enemies while you study for the Claude Certified Architect, with {count}+ real questions.",
+      "Take down a developer's worst enemies while you study for the Claude Certified Architect, with {count}+ exam-style questions.",
     players: 'PLAYERS',
     addPlayer: '+ ADD PLAYER',
     removePlayer: 'Remove player',
@@ -51,7 +51,7 @@ export const TEXTS = {
   },
   pt: {
     subtitle:
-      'Derrote os maiores inimigos de um dev enquanto estuda para a Claude Certified Architect, com mais de {count} perguntas.',
+      'Derrote os maiores inimigos de um dev enquanto estuda para a Claude Certified Architect, com mais de {count} perguntas no estilo da prova.',
     players: 'JOGADORES',
     addPlayer: '+ ADICIONAR',
     removePlayer: 'Remover jogador',
