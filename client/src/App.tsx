@@ -151,7 +151,7 @@ function App() {
 
         <Scoreboard teams={game.teams} currentTeamIndex={game.currentTeamIndex} />
 
-        <div className="flex min-h-0">
+        <div className="flex min-h-0 flex-1 items-center justify-center">
           <GameBoard
             board={game.board}
             playedCells={game.playedCells}
