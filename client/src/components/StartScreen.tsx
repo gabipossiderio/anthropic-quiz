@@ -16,6 +16,12 @@ interface Props {
   onStart: () => void
 }
 
+const MEDAL_BADGE = [
+  'bg-[#f8d800] text-black',
+  'bg-[#c8c8c8] text-black',
+  'bg-[#cd7f32] text-black',
+]
+
 export function StartScreen({
   teams,
   soundButton,
@@ -45,85 +51,113 @@ export function StartScreen({
   }, [])
 
   return (
-    <div className="relative flex min-h-svh flex-col items-center justify-center p-4">
+    <div className="relative flex min-h-svh flex-col items-center justify-center p-4 pb-14">
       <Scenery />
 
-      <div className="pixel-panel relative w-full max-w-xl bg-surface/95 p-6 text-center">
-        <div className="absolute right-3 top-3 flex items-center gap-2">
-          {languageButton}
-          {soundButton}
-        </div>
-
-        <h1 className="font-pixel mt-8 text-2xl leading-relaxed text-accent">
-          CCA-F
-        </h1>
-        <p className="font-pixel mt-1 text-xs text-text">HUNT</p>
-        <p className="mt-3 text-lg text-muted">{t.subtitle}</p>
-
-        <div className="mt-6 text-left">
-          <p className="font-pixel text-[10px] text-flag">{t.players}</p>
-          <div className="mt-3 flex flex-col gap-2">
-            {teams.map((team, i) => (
-              <div key={team.id} className="flex items-center gap-2">
-                <span
-                  className="h-5 w-5 shrink-0 border-2 border-black"
-                  style={{ background: team.color }}
-                />
-                <input
-                  value={team.name}
-                  onChange={(e) => onTeamName(team.id, e.target.value)}
-                  placeholder={`Player ${i + 1}`}
-                  maxLength={16}
-                  className="pixel-panel flex-1 bg-black px-3 py-2 text-lg text-text outline-none placeholder:text-muted/50 focus:text-accent"
-                />
-                {teams.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => onRemoveTeam(team.id)}
-                    className="font-pixel px-2 py-2 text-xs text-wrong hover:text-accent"
-                    aria-label={t.removePlayer}
-                  >
-                    X
-                  </button>
-                )}
-              </div>
-            ))}
+      <div className="relative flex w-full max-w-5xl flex-col items-stretch justify-center gap-4 lg:flex-row lg:items-start">
+        <div className="pixel-panel relative w-full bg-surface/95 p-6 text-center lg:flex-1">
+          <div className="absolute right-3 top-3 flex items-center gap-2">
+            {languageButton}
+            {soundButton}
           </div>
 
-          {teams.length < 4 && (
-            <button
-              type="button"
-              onClick={onAddTeam}
-              className="font-pixel mt-3 text-[10px] text-muted hover:text-accent"
-            >
-              {t.addPlayer}
-            </button>
+          <h1 className="font-pixel mt-8 text-2xl leading-relaxed text-accent">
+            CCA-F
+          </h1>
+          <p className="font-pixel mt-1 text-xs text-text">HUNT</p>
+          <p className="mt-3 text-lg text-muted">{t.subtitle}</p>
+
+          <div className="mt-6 text-left">
+            <p className="font-pixel text-[10px] text-flag">{t.players}</p>
+            <div className="mt-3 flex flex-col gap-2">
+              {teams.map((team, i) => (
+                <div key={team.id} className="flex items-center gap-2">
+                  <span
+                    className="h-5 w-5 shrink-0 border-2 border-black"
+                    style={{ background: team.color }}
+                  />
+                  <input
+                    value={team.name}
+                    onChange={(e) => onTeamName(team.id, e.target.value)}
+                    placeholder={`Player ${i + 1}`}
+                    maxLength={16}
+                    className="pixel-panel flex-1 bg-black px-3 py-2 text-lg text-text outline-none placeholder:text-muted/50 focus:text-accent"
+                  />
+                  {teams.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => onRemoveTeam(team.id)}
+                      className="font-pixel px-2 py-2 text-xs text-wrong hover:text-accent"
+                      aria-label={t.removePlayer}
+                    >
+                      X
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {teams.length < 4 && (
+              <button
+                type="button"
+                onClick={onAddTeam}
+                className="font-pixel mt-3 text-[10px] text-muted hover:text-accent"
+              >
+                {t.addPlayer}
+              </button>
+            )}
+          </div>
+
+          <div className="mt-6 border-t-2 border-border pt-4 text-left">
+            <p className="font-pixel text-[10px] text-flag">{t.howToPlay}</p>
+            <p className="mt-2 text-base text-muted">{t.howToPlayText}</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onStart}
+            disabled={!canStart}
+            className="font-pixel mt-7 w-full bg-accent px-6 py-4 text-sm text-black transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:bg-border disabled:text-muted"
+          >
+            {t.start}
+          </button>
+          {!canStart && (
+            <p className="mt-2 text-xs text-muted/70">{t.needName}</p>
           )}
         </div>
 
-        <div className="mt-6 border-t-2 border-border pt-4 text-left">
-          <p className="font-pixel text-[10px] text-flag">{t.howToPlay}</p>
-          <p className="mt-2 text-base text-muted">{t.howToPlayText}</p>
-        </div>
+        <div className="pixel-panel w-full overflow-hidden bg-surface/95 lg:w-72 lg:shrink-0 lg:self-start">
+          <div className="border-b-2 border-border bg-black/40 px-4 py-3">
+            <p className="font-pixel text-[10px] text-flag">{t.rankingTitle}</p>
+          </div>
 
-        <div className="mt-6 border-t-2 border-border pt-4 text-left">
-          <p className="font-pixel text-[10px] text-flag">{t.rankingTitle}</p>
-          <div className="mt-2 flex flex-col gap-1">
+          <div className="flex flex-col px-4 py-1">
+            {rankStatus === 'loading' && (
+              <p className="py-2 text-base text-muted/60">...</p>
+            )}
             {rankStatus === 'unavailable' && (
-              <p className="text-base text-muted/70">{t.rankingUnavailable}</p>
+              <p className="py-2 text-base text-muted/70">
+                {t.rankingUnavailable}
+              </p>
             )}
             {rankStatus === 'ok' && ranking.length === 0 && (
-              <p className="text-base text-muted/70">{t.rankingEmpty}</p>
+              <p className="py-2 text-base text-muted/70">{t.rankingEmpty}</p>
             )}
-            {ranking.slice(0, 5).map((entry, i) => (
+            {ranking.slice(0, 10).map((entry, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between gap-3 text-lg"
+                className="flex items-center gap-3 border-b border-border/30 py-2 last:border-0"
               >
-                <span className="font-pixel text-[10px] text-muted">
-                  {i + 1}º
+                <span
+                  className={`font-pixel flex h-6 w-6 shrink-0 items-center justify-center text-[9px] ${
+                    MEDAL_BADGE[i] ?? 'bg-surface-2 text-muted'
+                  }`}
+                >
+                  {i + 1}
                 </span>
-                <span className="flex-1 truncate text-text">{entry.name}</span>
+                <span className="flex-1 truncate text-lg text-text">
+                  {entry.name}
+                </span>
                 <span className="font-pixel text-[10px] text-hit">
                   {entry.points}
                 </span>
@@ -131,18 +165,6 @@ export function StartScreen({
             ))}
           </div>
         </div>
-
-        <button
-          type="button"
-          onClick={onStart}
-          disabled={!canStart}
-          className="font-pixel mt-7 w-full bg-accent px-6 py-4 text-sm text-black transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:bg-border disabled:text-muted"
-        >
-          {t.start}
-        </button>
-        {!canStart && (
-          <p className="mt-2 text-xs text-muted/70">{t.needName}</p>
-        )}
       </div>
 
       <div className="absolute inset-x-0 bottom-2">
